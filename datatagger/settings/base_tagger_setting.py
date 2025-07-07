@@ -45,19 +45,21 @@ class BaseTaggerSettings(BaseSettings, cli_parse_args=True, cli_enforce_required
     dimension: int = Field(default=2560, description="Embedding dimension")
 
     milvus_store_embeddings: bool = Field(
-        default=False, description="是否将embedding存入Milvus"
+        default=False, description="Whether to store embeddings in Milvus"
     )
-    milvus_host: str = Field(default="localhost", description="Milvus服务host")
-    milvus_port: str = Field(default="19530", description="Milvus服务端口")
-    milvus_collection: str = Field(default="embeddings", description="Milvus集合名")
+    milvus_host: str = Field(default="localhost", description="Milvus service host")
+    milvus_port: str = Field(default="19530", description="Milvus service port")
+    milvus_collection: str = Field(
+        default="embeddings", description="Milvus collection name"
+    )
 
-    # faiss相关配置
+    # faiss related configuration
     faiss_store_embeddings: bool = Field(
-        default=False, description="是否将embedding存入本地Faiss"
+        default=False, description="Whether to store embeddings in local Faiss"
     )
     faiss_index_file: str = Field(
-        default="data/faiss.index", description="Faiss索引文件路径"
+        default="data/faiss.index", description="Faiss index file path"
     )
     faiss_meta_file: str = Field(
-        default="data/faiss_meta.pkl", description="Faiss meta信息文件路径"
+        default="data/faiss_meta.pkl", description="Faiss meta info file path"
     )

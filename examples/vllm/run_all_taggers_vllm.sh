@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-# ========== 环境变量与路径设置 ==========
+# ========== Environment variables and path settings ==========
 export CUDA_VISIBLE_DEVICES=1
 source /root/github_projet/data-tagger/.env
 
 INPUT_FILE="/root/github_projet/data-tagger/data/alpaca_zh_demo.json"
 OUTPUT_DIR="/root/github_projet/data-tagger/data/tagged"
 
-# 模型路径（本地推理）
+# Model paths (local inference)
 LLM_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-8B"
 REWARD_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Skywork-Reward-Llama-3.1-8B-v0.2"
 EMBEDDING_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-Embedding-4B"
@@ -16,7 +16,7 @@ SAFETY_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Llama-Guar
 
 mkdir -p "$OUTPUT_DIR"
 
-# 公共参数
+# Common parameters
 COMMON_PARAMS="\
     --prompt_field instruction \
     --output_field output \
@@ -27,10 +27,10 @@ COMMON_PARAMS="\
     --tensor_parallel_size 1 \
     --gpu_memory_utilization 0.3"
 
-echo "========== 开始运行所有tagger任务（VLLM本地推理） =========="
+echo "========== Starting all tagger tasks (VLLM local inference) =========="
 
-# 1. 质量评估（QUALITY）
-echo "[1/7] 质量评估..."
+# 1. Quality Evaluation (QUALITY)
+echo "[1/7] Quality Evaluation..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$LLM_MODEL_PATH" \
@@ -38,8 +38,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$INPUT_FILE" \
     --output_file "$OUTPUT_DIR/quality_tagged.json"
 
-# 2. 难度评估（DIFFICULTY）
-echo "[2/7] 难度评估..."
+# 2. Difficulty Evaluation (DIFFICULTY)
+echo "[2/7] Difficulty Evaluation..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$LLM_MODEL_PATH" \
@@ -47,8 +47,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/quality_tagged.json" \
     --output_file "$OUTPUT_DIR/difficulty_tagged.json"
 
-# 3. 分类任务（CLASSIFICATION）
-echo "[3/7] 分类任务..."
+# 3. Classification Task (CLASSIFICATION)
+echo "[3/7] Classification Task..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$LLM_MODEL_PATH" \
@@ -56,8 +56,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/difficulty_tagged.json" \
     --output_file "$OUTPUT_DIR/classification_tagged.json"
 
-# 4. 安全性评估（SAFETY）
-echo "[4/7] 安全性评估..."
+# 4. Safety Evaluation (SAFETY)
+echo "[4/7] Safety Evaluation..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$SAFETY_MODEL_PATH" \
@@ -65,8 +65,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/classification_tagged.json" \
     --output_file "$OUTPUT_DIR/safety_tagged.json"
 
-# 5. 奖励评分（REWARD）
-echo "[5/7] 奖励评分..."
+# 5. Reward Scoring (REWARD)
+echo "[5/7] Reward Scoring..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$REWARD_MODEL_PATH" \
@@ -74,8 +74,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/safety_tagged.json" \
     --output_file "$OUTPUT_DIR/reward_tagged.json"
 
-# 6. 语言识别（LANGUAGE）
-echo "[6/7] 语言识别..."
+# 6. Language Detection (LANGUAGE)
+echo "[6/7] Language Detection..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$LLM_MODEL_PATH" \
@@ -83,8 +83,8 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/reward_tagged.json" \
     --output_file "$OUTPUT_DIR/language_tagged.json"
 
-# 7. 嵌入向量（EMBEDDING）
-echo "[7/7] 嵌入向量..."
+# 7. Embedding Vector (EMBEDDING)
+echo "[7/7] Embedding Vector..."
 python -m datatagger.tagger.unified_tagger_vllm \
     $COMMON_PARAMS \
     --vllm_model_path "$EMBEDDING_MODEL_PATH" \
@@ -94,11 +94,11 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/language_tagged.json" \
     --output_file "$OUTPUT_DIR/final_tagged.json"
 
-# 8. 格式化数据
-echo "[8/8] 格式化数据..."
+# 8. Format Data
+echo "[8/8] Format Data..."
 python -m datatagger.formatter.data_formatter \
     --input_file "$OUTPUT_DIR/final_tagged.json" \
     --output_file "$OUTPUT_DIR/final_tagged_formatted.json"
 
-echo "========== 所有tagger任务完成！ =========="
-echo "最终输出文件: $OUTPUT_DIR/final_tagged.json"
+echo "========== All tagger tasks completed! =========="
+echo "Final output file: $OUTPUT_DIR/final_tagged.json"

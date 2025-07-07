@@ -25,7 +25,7 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
             "stop": ["}"],
         }
 
-        # 是否开启思考
+        # Whether to enable thinking
         if self.settings.enable_thinking:
             self.api_params["chat_template_kwargs"] = {"enable_thinking": True}
         else:
@@ -35,7 +35,7 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
             "Content-Type": "application/json",
         }
 
-        # 动态导入和初始化 milvus_client（如需）
+        # Dynamically import and initialize milvus_client (if needed)
         self.faiss_client = getattr(self, "faiss_client", None)
         self.milvus_client = None
         if getattr(self, "milvus_store_embeddings", False) or getattr(
@@ -47,15 +47,9 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
                 self.milvus_client = MilvusClient()
             except ImportError:
                 self.logger.error(
-                    "未安装 milvus 相关依赖包，请先安装或关闭 milvus_store_embeddings 配置。"
+                    "Milvus related dependencies are not installed, please install them or disable milvus_store_embeddings."
                 )
                 raise
-
-        # 删除 EmbeddingStore 初始化
-        # self.embedding_store = EmbeddingStore(
-        #     faiss_client=self.faiss_client,
-        #     milvus_client=self.milvus_client,
-        # )
 
     def get_api_url(self, endpoint: str) -> str:
         base_url = self.api_base_url.rstrip("/")
@@ -123,7 +117,7 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
                     )
                     self.faiss_client.insert_embeddings(prompt_embeddings, prompt_metas)
                 return
-        # 多线程获取API响应
+        # Multi-threaded API response acquisition
         import concurrent.futures
 
         with concurrent.futures.ThreadPoolExecutor() as executor:

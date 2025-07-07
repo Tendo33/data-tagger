@@ -7,7 +7,7 @@ from lingua import LanguageDetectorBuilder
 
 from datatagger.settings.base_tagger_setting import BaseTaggerSettings, TagMission
 from datatagger.tagger.tag_missions import TagMissionProcessor
-from datatagger.utils.file_utils import CheckpointManager
+from datatagger.utils.file_utils import CheckpointManager, save_dataset
 from datatagger.utils.logger import setup_logger
 
 
@@ -17,7 +17,7 @@ class BaseUnifiedTagger:
         self.mission = settings.tag_mission
         if is_api:
             assert self.mission not in [TagMission.SAFETY, TagMission.REWARD], (
-                "API模式不支持safety和reward任务"
+                "API mode does not support safety and reward tasks"
             )
         self.mission_processor = TagMissionProcessor(self.mission, settings)
         self.tag_mission = self.mission_processor.get_name()
@@ -78,8 +78,8 @@ class BaseUnifiedTagger:
         settings: BaseTaggerSettings, tag_mission: TagMission, input_file: str
     ) -> Tuple[str, str, str]:
         """
-        根据 settings.output_file（如有）自动判断输出文件及 checkpoint 文件的后缀，
-        保证 checkpoint_data_file 与 output_file 后缀一致，checkpoint_state_file 固定为 .json。
+        Automatically determine output and checkpoint file suffixes based on settings.output_file (if provided),
+        ensuring checkpoint_data_file matches output_file's suffix, and checkpoint_state_file is always .json.
         """
         import os
 
@@ -170,9 +170,9 @@ class BaseUnifiedTagger:
         postprocess_fn=None,
     ):
         """
-        通用断点续训主循环，供子类调用。
-        process_batch_fn(batch_indices, dataset) 为每个batch的处理函数。
-        postprocess_fn(dataset) 可选，最终保存前的后处理。
+        General checkpoint-resume main loop, for subclass use.
+        process_batch_fn(batch_indices, dataset) is the batch processing function.
+        postprocess_fn(dataset) is optional, for post-processing before final save.
         """
         if not batch_size:
             batch_size = self.batch_size
@@ -202,18 +202,14 @@ class BaseUnifiedTagger:
                 if (i + 1) % checkpoint_every == 0:
                     checkpoint_manager.save(dataset, end_idx)
                     logger.info(f"Checkpoint saved at index {end_idx}.")
-            # 全部完成后保存最终结果前
+
+            # Save final result before completion
             if postprocess_fn is not None:
                 postprocess_fn(dataset)
 
             ext = os.path.splitext(output_file)[1].lower()
-            if ext == ".jsonl":
-                with open(output_file, "w", encoding="utf-8") as f:
-                    for item in dataset:
-                        f.write(json.dumps(item, ensure_ascii=False) + "\n")
-            else:  # 默认为 .json
-                with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(dataset, f, ensure_ascii=False, indent=2)
+            save_dataset(data=dataset, file_path=output_file, ext=ext)
+
             checkpoint_manager.cleanup()
             logger.info("Processing completed. Checkpoint cleaned up.")
         except Exception as e:
@@ -221,7 +217,7 @@ class BaseUnifiedTagger:
             checkpoint_manager.save(dataset, end_idx)
             raise
 
-    def get_min_neighbor_distance_and_repeat_count_and_similar_instruction(
+    def get_neighbor_info(
         self,
         embedding: list,
         backend: str = "faiss",
@@ -303,10 +299,8 @@ class BaseUnifiedTagger:
                     continue
             else:
                 continue
-            min_dist, repeat_count, min_similar_instruction = (
-                self.get_min_neighbor_distance_and_repeat_count_and_similar_instruction(
-                    embedding=embedding, backend=backend, meta=meta
-                )
+            min_dist, repeat_count, min_similar_instruction = self.get_neighbor_info(
+                embedding=embedding, backend=backend, meta=meta
             )
             item["min_neighbor_distance"] = (
                 round(min_dist, 4) if min_dist is not None else None

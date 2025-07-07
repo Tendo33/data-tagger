@@ -46,8 +46,8 @@ ALLOWED_SAFETY_LABELS = [
 
 class UnifiedDataFormatter:
     """
-    一个统一、高效的数据格式化工具，通过批处理支持大型数据集。
-    与 BaseFormatterSettings 完全集成，支持命令行配置。
+    A unified and efficient data formatting tool that supports large-scale datasets via batch processing.
+    Fully integrated with BaseFormatterSettings, supports CLI configuration.
     """
 
     DEFAULT_BATCH_SIZE = 1000
@@ -57,7 +57,9 @@ class UnifiedDataFormatter:
         self._total_processed = 0
 
     def run(self):
-        """执行格式化的主流程：计数 -> 迭代处理 -> 分批保存 -> 完成。"""
+        """
+        Main formatting workflow: count -> iterate/process -> batch save -> finish.
+        """
         print("🚀 Starting data formatting...")
         print(f"  - Input: {self.settings.input_file}")
         print(f"  - Output: {self.settings.output_file}")
@@ -103,14 +105,18 @@ class UnifiedDataFormatter:
         )
 
     def _prepare_output_files(self, output_path: str, temp_path: str):
-        """清理可能存在的旧输出文件。"""
+        """
+        Clean up possible old output files.
+        """
         for path in {output_path, temp_path}:
             if os.path.exists(path):
                 print(f"  - Removing existing file: {path}")
                 os.remove(path)
 
     def _count_entries(self) -> int:
-        """快速遍历文件以计算总行数/条目数。"""
+        """
+        Quickly scan the file to count total lines/entries.
+        """
         try:
             # Handle reading from stdin
             if self.settings.input_file == "/dev/stdin":
@@ -129,7 +135,9 @@ class UnifiedDataFormatter:
             sys.exit(1)
 
     def _iter_data(self) -> Generator[Dict[str, Any], None, None]:
-        """创建一个数据生成器，逐行/逐条读取文件以节省内存。"""
+        """
+        Create a data generator to read the file line by line/entry by entry to save memory.
+        """
         try:
             # Handle reading from stdin
             if self.settings.input_file == "/dev/stdin":
@@ -153,7 +161,9 @@ class UnifiedDataFormatter:
                 f.close()
 
     def _write_batch(self, batch: List[OrderedDict], path: str):
-        """以追加模式将一个批次的数据写入文件（始终为JSONL格式）。"""
+        """
+        Append a batch of data to the file (always JSONL format).
+        """
         try:
             with open(path, "a", encoding="utf-8") as f:
                 for item in batch:
@@ -164,7 +174,9 @@ class UnifiedDataFormatter:
             sys.exit(1)
 
     def _convert_jsonl_to_json(self, jsonl_path: str, json_path: str):
-        """将JSONL临时文件转换为一个合法的JSON数组文件，并格式化输出。"""
+        """
+        Convert a temporary JSONL file to a valid JSON array file and format the output.
+        """
         try:
             with (
                 open(jsonl_path, "r", encoding="utf-8") as f_in,
@@ -177,7 +189,9 @@ class UnifiedDataFormatter:
             sys.exit(1)
 
     def process_entry(self, entry: Dict[str, Any]) -> Optional[OrderedDict]:
-        """处理单个数据条目，将其转换为目标格式。"""
+        """
+        Process a single data entry and convert it to the target format.
+        """
         cleaned_entry = self._clean_entry(entry)
 
         if not self._can_build_conversation(cleaned_entry):
@@ -186,14 +200,14 @@ class UnifiedDataFormatter:
 
         od = OrderedDict()
 
-        # 1. 核心身份信息 (使用 UUID)
+        # 1. Core identity info (use UUID)
         new_id = str(uuid.uuid4())[:8]
         od["id"] = new_id
 
-        # 2. 对话内容
+        # 2. Conversation content
         od["system"] = cleaned_entry.get("system")
         od["conversations"] = self._build_conversations(cleaned_entry, self.settings)
-        # prompt 字段校验逻辑
+        # prompt field validation logic
         prompt_value = cleaned_entry.get(
             self.settings.prompt_field,
             od["conversations"][0]["value"] if od["conversations"] else None,
@@ -202,28 +216,28 @@ class UnifiedDataFormatter:
             first_conv = od["conversations"][0]
             if first_conv.get("from") != "human":
                 print(
-                    f"[Warning] Entry id={od['id']} prompt_field未正确填充，conversations第一项不是human，prompt字段将设为None。"
+                    f"[Warning] Entry id={od['id']} prompt_field is not correctly filled, first conversation is not human, prompt field will be set to None."
                 )
                 prompt_value = None
         od[self.settings.prompt_field] = prompt_value
-        # output 字段校验逻辑
+        # output field validation logic
         output_value = cleaned_entry.get(
             self.settings.output_field,
             od["conversations"][-1]["value"] if od["conversations"] else None,
         )
-        # conversations 最后一项不是 gpt，则 output 设为 None 并警告
+        # If the last conversation is not gpt, set output to None and warn
         if od["conversations"]:
             last_conv = od["conversations"][-1]
             if last_conv.get("from") != "gpt":
                 print(
-                    f"[Warning] Entry id={od['id']} output_field未正确填充，conversations最后一项不是gpt，output字段将设为None。"
+                    f"[Warning] Entry id={od['id']} output_field is not correctly filled, last conversation is not gpt, output field will be set to None."
                 )
                 output_value = None
         od[self.settings.output_field] = output_value
         od[f"{self.settings.prompt_field}_length"] = len(od[self.settings.prompt_field])
         od[f"{self.settings.output_field}_length"] = len(od[self.settings.output_field])
 
-        # 3. 元数据和评估字段（新版适配）
+        # 3. Meta data and evaluation fields (new version adaptation)
         od["intent"] = cleaned_entry.get("intent")
         od["knowledge"] = cleaned_entry.get("knowledge")
         od["difficulty"] = self._parse_score(cleaned_entry.get("difficulty"), 1, 5)
@@ -245,7 +259,7 @@ class UnifiedDataFormatter:
         od["other_task_category"] = cleaned_entry.get("other_task_category", [])
         od["language"] = cleaned_entry.get("language")
 
-        # 4. 其他机器学习相关字段
+        # 4. Other ML-related fields
         od["safety"] = (
             cleaned_entry.get("safety")
             if cleaned_entry.get("safety") in ALLOWED_SAFETY_LABELS

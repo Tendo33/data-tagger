@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 import json_repair
+
 from datatagger.settings.base_tagger_setting import BaseTaggerSettings, TagMission
 from datatagger.utils.prompt_utils import (
     combined_quality_rating,

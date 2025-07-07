@@ -39,7 +39,7 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
             self.checkpoint_data_file = None
             self.checkpoint_state_file = None
 
-        # 动态导入和初始化 milvus_client（如需）
+        # Dynamically import and initialize milvus_client (if needed)
         self.faiss_client = getattr(self, "faiss_client", None)
         self.milvus_client = None
         if getattr(self, "milvus_store_embeddings", False) or getattr(
@@ -51,15 +51,9 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
                 self.milvus_client = MilvusClient()
             except ImportError:
                 self.logger.error(
-                    "未安装 milvus 相关依赖包，请先安装或关闭 milvus_store_embeddings 配置。"
+                    "Milvus related dependencies are not installed, please install them or disable milvus_store_embeddings."
                 )
                 raise
-
-        # 删除 EmbeddingStore 初始化
-        # self.embedding_store = EmbeddingStore(
-        #     faiss_client=self.faiss_client,
-        #     milvus_client=self.milvus_client,
-        # )
 
     def get_llm(self) -> Tuple[Optional[LLM], Optional[Any], Optional[Any]]:
         if self.mission == TagMission.LANGUAGE:
@@ -191,7 +185,7 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
                 embedding = output.outputs.embedding
                 prompt_emb_list.append(embedding)
                 prompt_metas.append(str(dataset[idx].get(self.prompt_field, "")))
-            # 直接插入到 faiss 或 milvus
+            # Directly insert into faiss or milvus
             if self.milvus_store_embeddings and self.milvus_client:
                 self.logger.info(
                     f"Inserting {len(prompt_emb_list)} prompt embeddings to Milvus..."
@@ -255,7 +249,7 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
         for idx in batch_indices:
             try:
                 item = dataset[idx]
-                # TODO 单问题多回答，制造rm，DPO数据集
+                # TODO Single question multiple answers, create rm, DPO dataset
                 chat = [
                     {"role": "user", "content": item[self.prompt_field]},
                     {"role": "assistant", "content": item[self.output_field]},

@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-# ========== 环境变量与路径设置 ==========
+# ========== Environment variables and path settings ==========
 source /root/github_projet/data-tagger/.env
 
 INPUT_FILE="/root/github_projet/data-tagger/data/alpaca_zh_demo.json"
 OUTPUT_DIR="/root/github_projet/data-tagger/data/tagged"
 
-# API模型名称
+# API model names
 API_MODEL_NAME="$CHAT_MODEL_NAME"
 EMBEDDING_MODEL_NAME="$EMBEDDING_MODEL_NAME"
 API_URL="$OPENAI_BASE_URL"
@@ -15,7 +15,7 @@ API_KEY="$OPENAI_API_KEY"
 
 mkdir -p "$OUTPUT_DIR"
 
-# 公共参数
+# Common parameters
 COMMON_PARAMS="\
     --prompt_field instruction \
     --output_field output \
@@ -25,10 +25,10 @@ COMMON_PARAMS="\
     --api_url $API_URL \
     --api_key $API_KEY"
 
-echo "========== 开始运行所有tagger任务（API推理） =========="
+echo "========== Starting all tagger tasks (API inference) =========="
 
-# 1. 质量评估（QUALITY）
-echo "[1/7] 质量评估..."
+# 1. Quality Evaluation (QUALITY)
+echo "[1/7] Quality Evaluation..."
 python -m datatagger.tagger.unified_tagger_api \
     $COMMON_PARAMS \
     --api_model_name "$API_MODEL_NAME" \
@@ -36,8 +36,8 @@ python -m datatagger.tagger.unified_tagger_api \
     --input_file "$INPUT_FILE" \
     --output_file "$OUTPUT_DIR/quality_tagged.json"
 
-# 2. 难度评估（DIFFICULTY）
-echo "[2/7] 难度评估..."
+# 2. Difficulty Evaluation (DIFFICULTY)
+echo "[2/7] Difficulty Evaluation..."
 python -m datatagger.tagger.unified_tagger_api \
     $COMMON_PARAMS \
     --api_model_name "$API_MODEL_NAME" \
@@ -45,8 +45,8 @@ python -m datatagger.tagger.unified_tagger_api \
     --input_file "$OUTPUT_DIR/quality_tagged.json" \
     --output_file "$OUTPUT_DIR/difficulty_tagged.json"
 
-# 3. 分类任务（CLASSIFICATION）
-echo "[3/7] 分类任务..."
+# 3. Classification Task (CLASSIFICATION)
+echo "[3/7] Classification Task..."
 python -m datatagger.tagger.unified_tagger_api \
     $COMMON_PARAMS \
     --api_model_name "$API_MODEL_NAME" \
@@ -54,8 +54,8 @@ python -m datatagger.tagger.unified_tagger_api \
     --input_file "$OUTPUT_DIR/difficulty_tagged.json" \
     --output_file "$OUTPUT_DIR/classification_tagged.json"
 
-# 4. 语言识别（LANGUAGE）
-echo "[4/7] 语言识别..."
+# 4. Language Detection (LANGUAGE)
+echo "[4/7] Language Detection..."
 python -m datatagger.tagger.unified_tagger_api \
     $COMMON_PARAMS \
     --api_model_name "$API_MODEL_NAME" \
@@ -63,8 +63,8 @@ python -m datatagger.tagger.unified_tagger_api \
     --input_file "$OUTPUT_DIR/classification_tagged.json" \
     --output_file "$OUTPUT_DIR/language_tagged.json"
 
-# 5. 嵌入向量（EMBEDDING）
-echo "[5/7] 嵌入向量..."
+# 5. Embedding Vector (EMBEDDING)
+echo "[5/7] Embedding Vector..."
 python -m datatagger.tagger.unified_tagger_api \
     $COMMON_PARAMS \
     --api_model_name "$EMBEDDING_MODEL_NAME" \
@@ -74,5 +74,5 @@ python -m datatagger.tagger.unified_tagger_api \
     --input_file "$OUTPUT_DIR/language_tagged.json" \
     --output_file "$OUTPUT_DIR/final_tagged.json"
 
-echo "========== 所有tagger任务完成！ =========="
-echo "最终输出文件: $OUTPUT_DIR/final_tagged.json" 
+echo "========== All tagger tasks completed! =========="
+echo "Final output file: $OUTPUT_DIR/final_tagged.json" 

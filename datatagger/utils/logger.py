@@ -4,9 +4,9 @@ from datetime import datetime
 
 from loguru import logger
 
-# 获取当前日期
+# Get current date
 current_date = datetime.now().strftime("%Y-%m-%d")
-# 日志目录
+# Log directory
 LOG_DIR = f"logs/{current_date}_logs"
 
 
@@ -22,30 +22,30 @@ def setup_logger(
 ):
     log_dir = log_dir or LOG_DIR
     log_file = log_file or f"{project_name}_{current_date}.log"
-    # 创建日志目录
+    # Create log directory
     os.makedirs(log_dir, exist_ok=True)
-    # 清除默认的日志处理器
+    # Remove default log handlers
     logger.remove()
-    # 控制台日志格式
+    # Console log format
     console_format = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     )
-    # 文件日志格式
+    # File log format
     file_format = (
         "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
         "{level: <8} | "
         "{name}:{function}:{line} - {message}"
     )
-    # 创建项目特定的日志目录
+    # Create project-specific log directory
     project_specific_log_dir = os.path.join(log_dir, project_name)
     os.makedirs(project_specific_log_dir, exist_ok=True)
-    # 定义日志文件路径
+    # Define log file path
     log_file_path = os.path.join(
         project_specific_log_dir, f"{project_name}_{{time:YYYY-MM-DD}}.log"
     )
-    # 添加控制台日志处理器
+    # Add console log handler
     logger.add(
         sys.stdout,
         format=console_format,
@@ -53,7 +53,7 @@ def setup_logger(
         colorize=True,
         enqueue=True,
     )
-    # 添加文件日志处理器
+    # Add file log handler
     logger.add(
         log_file_path,
         format=file_format,

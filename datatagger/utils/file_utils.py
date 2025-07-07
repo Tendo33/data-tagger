@@ -59,14 +59,16 @@ def load_dataset_from_file(filename):
 
 
 # Save dataset
-def save_dataset(data, filename, convert_to_jsonl=False):
-    if convert_to_jsonl:
-        with open(filename, "w", encoding="utf-8") as file:
+def save_dataset(data: list, file_path: str, ext: str = ".jsonl"):
+    if ext == ".jsonl":
+        with open(file_path, "w", encoding="utf-8") as file:
             for obj in data:
                 file.write(json.dumps(obj, ensure_ascii=False) + "\n")
-    else:
-        with open(filename, "w", encoding="utf-8") as file:
+    elif ext == ".json":
+        with open(file_path, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
+    else:
+        raise ValueError("Invalid file format. Please provide a .json or .jsonl file.")
 
 
 # UUID

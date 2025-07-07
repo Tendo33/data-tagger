@@ -45,9 +45,11 @@ class FaissClient:
             pickle.dump(self.metas, f)
 
     def search(self, embedding: List[float], top_k: int = 5) -> List[Tuple[str, float]]:
-        D, I = self.index.search(np.array([embedding], dtype="float32"), top_k)
+        distances, indices = self.index.search(
+            np.array([embedding], dtype="float32"), top_k
+        )
         results = []
-        for idx, dist in zip(I[0], D[0]):
+        for idx, dist in zip(indices[0], distances[0]):
             if idx < len(self.metas):
                 results.append((self.metas[idx], float(dist)))
         return results

@@ -94,5 +94,11 @@ python -m datatagger.tagger.unified_tagger_vllm \
     --input_file "$OUTPUT_DIR/language_tagged.json" \
     --output_file "$OUTPUT_DIR/final_tagged.json"
 
+# 8. 格式化数据
+echo "[8/8] 格式化数据..."
+python -m datatagger.formatter.data_formatter \
+    --input_file "$OUTPUT_DIR/final_tagged.json" \
+    --output_file "$OUTPUT_DIR/final_tagged_formatted.json"
+
 echo "========== 所有tagger任务完成！ =========="
 echo "最终输出文件: $OUTPUT_DIR/final_tagged.json" 

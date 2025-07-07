@@ -5,8 +5,9 @@ import uuid
 from collections import OrderedDict
 from typing import Any, Dict, Generator, List, Optional
 
-from datatagger.settings.base_formatter_setting import BaseFormatterSettings
 from tqdm import tqdm
+
+from datatagger.settings.base_formatter_setting import BaseFormatterSettings
 
 ALLOWED_TASK_CATEGORIES = [
     "Information seeking",
@@ -59,12 +60,10 @@ class UnifiedDataFormatter:
         """执行格式化的主流程：计数 -> 迭代处理 -> 分批保存 -> 完成。"""
         print("🚀 Starting data formatting...")
         print(f"  - Input: {self.settings.input_file}")
-        print(
-            f"  - Output: {self.settings.output_file} (format: {self.settings.save_as})"
-        )
+        print(f"  - Output: {self.settings.output_file}")
         print(f"  - Internal batch size: {self.DEFAULT_BATCH_SIZE}")
 
-        is_json_format = self.settings.save_as.lower() == "json"
+        is_json_format = self.settings.output_file.lower().endswith(".json")
         output_path = self.settings.output_file
         temp_path = f"{output_path}.tmp" if is_json_format else output_path
 

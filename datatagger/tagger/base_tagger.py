@@ -25,7 +25,6 @@ class BaseUnifiedTagger:
         self.checkpoint_every = settings.checkpoint_every
         self.debug = settings.debug
         self.dimension = settings.dimension
-        self.save_as = settings.save_as
         self.prompt_field = settings.prompt_field
         self.output_field = settings.output_field
         self.milvus_store_embeddings = settings.milvus_store_embeddings
@@ -86,8 +85,8 @@ class BaseUnifiedTagger:
         )
         checkpoint_data_file = f"{base_name}_{tag_mission}_checkpoint.jsonl"
         checkpoint_state_file = f"{base_name}_{tag_mission}_checkpoint_state.json"
-        if settings.save_as == "json":
-            output_file = f"{output_file[: output_file.rfind('.')]}.json"
+        # 根据 output_file 后缀自动判断格式
+        if output_file.endswith(".json"):
             checkpoint_data_file = (
                 f"{checkpoint_data_file[: checkpoint_data_file.rfind('.')]}.json"
             )

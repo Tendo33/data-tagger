@@ -38,7 +38,6 @@ class BaseTaggerSettings(BaseSettings, cli_parse_args=True, cli_enforce_required
     batch_size: int = Field(default=100, description="Batch size for processing")
     checkpoint_every: int = Field(default=1000, description="Checkpoint frequency")
     debug: bool = Field(default=False, description="Enable debug mode")
-    save_as: str = Field(default="json", description="Output format, json or jsonl")
     log_level: str = Field(default="INFO", description="Log level")
     max_tokens: int = Field(default=2048, description="Maximum tokens to generate")
     temperature: float = Field(default=0.8, description="Sampling temperature")

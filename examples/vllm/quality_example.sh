@@ -1,10 +1,10 @@
 #!/bin/bash
 # Example: VLLM 质量评估任务
 python -m datatagger.tagger.unified_tagger_vllm \
-  --mission quality \
-  --input_file data/quality_input.jsonl \
-  --output_file output/quality_output.jsonl \
-  --vllm_model_path models/vllm_quality_model \
+  --mission QUALITY \
+  --input_file data/alpaca_zh_demo.json \
+  --output_file data/tagged/alpaca_zh_demo_quality.jsonl \
+  --vllm_model_path /mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-8B \
   --batch_size 8 \
   --device 0 \
   --tensor_parallel_size 1 \
@@ -13,5 +13,4 @@ python -m datatagger.tagger.unified_tagger_vllm \
   --output_field output \
   --enable_thinking False \
   --checkpoint_every 10 \
-  --save_as jsonl \
   --log_level INFO

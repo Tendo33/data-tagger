@@ -77,19 +77,22 @@ class BaseUnifiedTagger:
     def get_output_files(
         settings: BaseTaggerSettings, tag_mission: TagMission, input_file: str
     ) -> Tuple[str, str, str]:
-        base_name = input_file[: input_file.rfind(".")]
-        output_file = (
-            settings.output_file
-            if settings.output_file
-            else f"{base_name}_{tag_mission}.jsonl"
-        )
-        checkpoint_data_file = f"{base_name}_{tag_mission}_checkpoint.jsonl"
-        checkpoint_state_file = f"{base_name}_{tag_mission}_checkpoint_state.json"
-        # 根据 output_file 后缀自动判断格式
-        if output_file.endswith(".json"):
-            checkpoint_data_file = (
-                f"{checkpoint_data_file[: checkpoint_data_file.rfind('.')]}.json"
-            )
+        """
+        根据 settings.output_file（如有）自动判断输出文件及 checkpoint 文件的后缀，
+        保证 checkpoint_data_file 与 output_file 后缀一致，checkpoint_state_file 固定为 .json。
+        """
+        import os
+
+        if settings.output_file:
+            output_file = settings.output_file
+            ext = os.path.splitext(output_file)[1]
+        else:
+            base_name = input_file[: input_file.rfind(".")]
+            ext = ".jsonl"
+            output_file = f"{base_name}_{tag_mission}{ext}"
+        base_ckpt = os.path.splitext(output_file)[0]
+        checkpoint_data_file = f"{base_ckpt}_checkpoint{ext}"
+        checkpoint_state_file = f"{base_ckpt}_checkpoint_state.json"
         return output_file, checkpoint_data_file, checkpoint_state_file
 
     @staticmethod
@@ -202,8 +205,15 @@ class BaseUnifiedTagger:
             # 全部完成后保存最终结果前
             if postprocess_fn is not None:
                 postprocess_fn(dataset)
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(dataset, f, ensure_ascii=False, indent=2)
+
+            ext = os.path.splitext(output_file)[1].lower()
+            if ext == ".jsonl":
+                with open(output_file, "w", encoding="utf-8") as f:
+                    for item in dataset:
+                        f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            else:  # 默认为 .json
+                with open(output_file, "w", encoding="utf-8") as f:
+                    json.dump(dataset, f, ensure_ascii=False, indent=2)
             checkpoint_manager.cleanup()
             logger.info("Processing completed. Checkpoint cleaned up.")
         except Exception as e:

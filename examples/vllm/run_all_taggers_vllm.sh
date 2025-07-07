@@ -101,4 +101,4 @@ python -m datatagger.formatter.data_formatter \
     --output_file "$OUTPUT_DIR/final_tagged_formatted.json"
 
 echo "========== 所有tagger任务完成！ =========="
-echo "最终输出文件: $OUTPUT_DIR/final_tagged.json" 
+echo "最终输出文件: $OUTPUT_DIR/final_tagged.json"

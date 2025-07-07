@@ -1,6 +1,6 @@
 from typing import List, Optional
-from .faiss_utils import FaissClient
-from .milvus_utils import MilvusClient
+from datatagger.utils.faiss_utils import FaissClient
+from datatagger.utils.milvus_utils import MilvusClient
 
 
 class EmbeddingStore:

@@ -11,11 +11,11 @@ class BaseFormatterSettings(
     output_file: str = Field(
         ..., description="输出数据文件路径（支持 .json/.jsonl）", required=True
     )
-
+    batch_size: int = Field(default=1000, description="Batch size")
     log_level: str = Field(default="INFO", description="日志等级")
     prompt_field: str = Field(
         default="instruction", description="Field name in input file to use as prompt"
     )
     output_field: str = Field(
-        default="response", description="Field name in input file to use as output"
+        default="output", description="Field name in input file to use as output"
     )

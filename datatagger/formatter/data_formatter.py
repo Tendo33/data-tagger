@@ -164,20 +164,14 @@ class UnifiedDataFormatter:
             sys.exit(1)
 
     def _convert_jsonl_to_json(self, jsonl_path: str, json_path: str):
-        """将JSONL临时文件转换为一个合法的JSON数组文件。"""
+        """将JSONL临时文件转换为一个合法的JSON数组文件，并格式化输出。"""
         try:
             with (
                 open(jsonl_path, "r", encoding="utf-8") as f_in,
                 open(json_path, "w", encoding="utf-8") as f_out,
             ):
-                f_out.write("[")
-                first = True
-                for line in f_in:
-                    if not first:
-                        f_out.write(",\n")
-                    f_out.write(line.strip())
-                    first = False
-                f_out.write("\n]")
+                items = [json.loads(line) for line in f_in if line.strip()]
+                json.dump(items, f_out, ensure_ascii=False, indent=4)
         except (IOError, FileNotFoundError) as e:
             print(f"Error converting JSONL to JSON: {e}", file=sys.stderr)
             sys.exit(1)
@@ -195,19 +189,39 @@ class UnifiedDataFormatter:
         # 1. 核心身份信息 (使用 UUID)
         new_id = str(uuid.uuid4())[:8]
         od["id"] = new_id
-        od["conversation_id"] = new_id
 
         # 2. 对话内容
         od["system"] = cleaned_entry.get("system")
         od["conversations"] = self._build_conversations(cleaned_entry, self.settings)
-        od[self.settings.prompt_field] = cleaned_entry.get(
+        # prompt 字段校验逻辑
+        prompt_value = cleaned_entry.get(
             self.settings.prompt_field,
             od["conversations"][0]["value"] if od["conversations"] else None,
         )
-        od[self.settings.output_field] = cleaned_entry.get(
+        if od["conversations"]:
+            first_conv = od["conversations"][0]
+            if first_conv.get("from") != "human":
+                print(
+                    f"[Warning] Entry id={od['id']} prompt_field未正确填充，conversations第一项不是human，prompt字段将设为None。"
+                )
+                prompt_value = None
+        od[self.settings.prompt_field] = prompt_value
+        # output 字段校验逻辑
+        output_value = cleaned_entry.get(
             self.settings.output_field,
             od["conversations"][-1]["value"] if od["conversations"] else None,
         )
+        # conversations 最后一项不是 gpt，则 output 设为 None 并警告
+        if od["conversations"]:
+            last_conv = od["conversations"][-1]
+            if last_conv.get("from") != "gpt":
+                print(
+                    f"[Warning] Entry id={od['id']} output_field未正确填充，conversations最后一项不是gpt，output字段将设为None。"
+                )
+                output_value = None
+        od[self.settings.output_field] = output_value
+        od[f"{self.settings.prompt_field}_length"] = len(od[self.settings.prompt_field])
+        od[f"{self.settings.output_field}_length"] = len(od[self.settings.output_field])
 
         # 3. 元数据和评估字段（新版适配）
         od["intent"] = cleaned_entry.get("intent")
@@ -278,18 +292,25 @@ class UnifiedDataFormatter:
         if entry.get("conversations"):
             return entry["conversations"]
         conversations = []
+        # 1. history 模式
         if entry.get("history"):
             for q, a in entry["history"]:
-                conversations.append({"from": "human", "value": q})
-                conversations.append({"from": "gpt", "value": a})
+                if q is not None and str(q).strip():
+                    conversations.append({"from": "human", "value": str(q).strip()})
+                if a is not None and str(a).strip():
+                    conversations.append({"from": "gpt", "value": str(a).strip()})
+        # 2. instruction + input + output/chosen 模式
         instruction = entry.get(settings.prompt_field)
-        if instruction:
-            input_text = entry.get("input", "")
-            human_value = f"{instruction}\n{input_text}".strip()
+        input_text = entry.get("input")
+        if instruction is not None and str(instruction).strip():
+            if input_text is not None and str(input_text).strip():
+                human_value = f"{instruction}\n{input_text}".strip()
+            else:
+                human_value = str(instruction).strip()
             conversations.append({"from": "human", "value": human_value})
         output = entry.get("chosen") or entry.get(settings.output_field)
-        if output:
-            conversations.append({"from": "gpt", "value": output})
+        if output is not None and str(output).strip():
+            conversations.append({"from": "gpt", "value": str(output).strip()})
         return conversations
 
     @staticmethod

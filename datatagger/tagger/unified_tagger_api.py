@@ -8,7 +8,6 @@ from datatagger.utils.api_utils import (
     get_embedding_with_retry,
 )
 from datatagger.utils.file_utils import load_dataset_from_file
-from datatagger.utils.embedding_store import EmbeddingStore
 
 
 class UnifiedTaggerAPI(BaseUnifiedTagger):
@@ -36,11 +35,27 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
             "Content-Type": "application/json",
         }
 
-        # 初始化EmbeddingStore
-        self.embedding_store = EmbeddingStore(
-            faiss_client=getattr(self, "faiss_client", None),
-            milvus_client=getattr(self, "milvus_client", None),
-        )
+        # 动态导入和初始化 milvus_client（如需）
+        self.faiss_client = getattr(self, "faiss_client", None)
+        self.milvus_client = None
+        if getattr(self, "milvus_store_embeddings", False) or getattr(
+            settings, "milvus_store_embeddings", False
+        ):
+            try:
+                from datatagger.utils.milvus_utils import MilvusClient
+
+                self.milvus_client = MilvusClient()
+            except ImportError:
+                self.logger.error(
+                    "未安装 milvus 相关依赖包，请先安装或关闭 milvus_store_embeddings 配置。"
+                )
+                raise
+
+        # 删除 EmbeddingStore 初始化
+        # self.embedding_store = EmbeddingStore(
+        #     faiss_client=self.faiss_client,
+        #     milvus_client=self.milvus_client,
+        # )
 
     def get_api_url(self, endpoint: str) -> str:
         base_url = self.api_base_url.rstrip("/")
@@ -61,9 +76,7 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
             import concurrent.futures
 
             prompt_texts = [dataset[idx][self.prompt_field] for idx in batch_indices]
-            # output_texts = [dataset[idx][self.output_field] for idx in batch_indices]  # 回答不再embed
             api_url = self.get_api_url("embeddings")
-            # 多线程获取prompt_embeddings
             prompt_embeddings = [None] * len(prompt_texts)
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future_to_idx = {
@@ -90,53 +103,25 @@ class UnifiedTaggerAPI(BaseUnifiedTagger):
                         self.logger.error(
                             f"Exception in prompt embedding for index {i}: {e}"
                         )
-            # 多线程获取output_embeddings
-            # output_embeddings = [None] * len(output_texts)
-            # with concurrent.futures.ThreadPoolExecutor() as executor:
-            #     future_to_idx = {
-            #         executor.submit(
-            #             get_embedding_with_retry,
-            #             text,
-            #             api_url,
-            #             self.api_headers,
-            #             self.api_model_name,
-            #             self.dimension,
-            #         ): i
-            #         for i, text in enumerate(output_texts)
-            #     }
-            #     for future in concurrent.futures.as_completed(future_to_idx):
-            #         i = future_to_idx[future]
-            #         try:
-            #             embedding = future.result()
-            #             if embedding is not None:
-            #                 output_embeddings[i] = embedding
-            #             else:
-            #                 self.logger.error(
-            #                     f"Invalid embedding response for output: {output_texts[i]}"
-            #                 )
-            #         except Exception as e:
-            #             self.logger.error(
-            #                 f"Exception in output embedding for index {i}: {e}"
-            #             )
-            # faiss写入
-            if self.faiss_store_embeddings or self.milvus_store_embeddings:
+            if (self.faiss_store_embeddings and self.faiss_client) or (
+                self.milvus_store_embeddings and self.milvus_client
+            ):
                 prompt_metas = [
                     str(dataset[idx].get(self.prompt_field, ""))
                     for idx in batch_indices
                 ]
-                # output_metas = [
-                #     str(dataset[idx].get(self.output_field, ""))
-                #     for idx in batch_indices
-                # ]
-                self.logger.info(
-                    f"Inserting {len(prompt_embeddings)} prompt embeddings to Milvus/Faiss via EmbeddingStore..."
-                )
-                self.embedding_store.insert(
-                    prompt_embeddings,
-                    prompt_metas,
-                    use_faiss=self.faiss_store_embeddings,
-                    use_milvus=self.milvus_store_embeddings,
-                )
+                if self.milvus_store_embeddings and self.milvus_client:
+                    self.logger.info(
+                        f"Inserting {len(prompt_embeddings)} prompt embeddings to Milvus..."
+                    )
+                    self.milvus_client.insert_embeddings(
+                        prompt_embeddings, prompt_metas
+                    )
+                if self.faiss_store_embeddings and self.faiss_client:
+                    self.logger.info(
+                        f"Inserting {len(prompt_embeddings)} prompt embeddings to Faiss..."
+                    )
+                    self.faiss_client.insert_embeddings(prompt_embeddings, prompt_metas)
                 return
         # 多线程获取API响应
         import concurrent.futures

@@ -1,13 +1,13 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+from lingua import LanguageDetectorBuilder
+from transformers import AutoTokenizer
+from vllm import LLM, PoolingParams, SamplingParams
+
 from datatagger.settings.base_tagger_setting import TagMission
 from datatagger.settings.tagger_settings_vllm import TaggerSettingsVLLM
 from datatagger.tagger.base_tagger import BaseUnifiedTagger
 from datatagger.utils.file_utils import load_dataset_from_file
-from datatagger.utils.embedding_store import EmbeddingStore
-from lingua import LanguageDetectorBuilder
-from transformers import AutoTokenizer
-from vllm import LLM, PoolingParams, SamplingParams
 
 
 class UnifiedTaggerVLLM(BaseUnifiedTagger):
@@ -39,11 +39,27 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
             self.checkpoint_data_file = None
             self.checkpoint_state_file = None
 
-        # 初始化EmbeddingStore
-        self.embedding_store = EmbeddingStore(
-            faiss_client=getattr(self, "faiss_client", None),
-            milvus_client=getattr(self, "milvus_client", None),
-        )
+        # 动态导入和初始化 milvus_client（如需）
+        self.faiss_client = getattr(self, "faiss_client", None)
+        self.milvus_client = None
+        if getattr(self, "milvus_store_embeddings", False) or getattr(
+            settings, "milvus_store_embeddings", False
+        ):
+            try:
+                from datatagger.utils.milvus_utils import MilvusClient
+
+                self.milvus_client = MilvusClient()
+            except ImportError:
+                self.logger.error(
+                    "未安装 milvus 相关依赖包，请先安装或关闭 milvus_store_embeddings 配置。"
+                )
+                raise
+
+        # 删除 EmbeddingStore 初始化
+        # self.embedding_store = EmbeddingStore(
+        #     faiss_client=self.faiss_client,
+        #     milvus_client=self.milvus_client,
+        # )
 
     def get_llm(self) -> Tuple[Optional[LLM], Optional[Any], Optional[Any]]:
         if self.mission == TagMission.LANGUAGE:
@@ -168,46 +184,24 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
 
         if self.mission == TagMission.EMBEDDING:
             prompt_texts = [dataset[idx][self.prompt_field] for idx in batch_indices]
-            # output_texts = [dataset[idx][self.output_field] for idx in batch_indices]  # 回答不再embed
             prompt_embeddings = llm.embed(prompt_texts)
             prompt_emb_list = []
             prompt_metas = []
             for output, idx in zip(prompt_embeddings, batch_indices):
                 embedding = output.outputs.embedding
-                # dataset[idx][f"{self.prompt_field}_embedding"] = embedding  # 不再写入dataset
                 prompt_emb_list.append(embedding)
                 prompt_metas.append(str(dataset[idx].get(self.prompt_field, "")))
-            # output_embeddings = llm.embed(output_texts)  # 回答不再embed
-            # output_emb_list = []
-            # output_metas = []
-            # for output, idx in zip(output_embeddings, batch_indices):
-            #     embedding = output.outputs.embedding
-            #     # dataset[idx][f"{self.output_field}_embedding"] = embedding  # 不再写入dataset
-            #     output_emb_list.append(embedding)
-            #     output_metas.append(str(dataset[idx].get(self.output_field, "")))
-            if self.milvus_store_embeddings:
+            # 直接插入到 faiss 或 milvus
+            if self.milvus_store_embeddings and self.milvus_client:
                 self.logger.info(
-                    f"Inserting {len(prompt_emb_list)} prompt embeddings to Milvus/Faiss via EmbeddingStore..."
+                    f"Inserting {len(prompt_emb_list)} prompt embeddings to Milvus..."
                 )
-                self.embedding_store.insert(
-                    prompt_emb_list,
-                    prompt_metas,
-                    use_faiss=self.faiss_store_embeddings,
-                    use_milvus=self.milvus_store_embeddings,
-                )
-                # self.logger.info(
-                #     f"Inserting {len(output_emb_list)} output embeddings to Milvus..."
-                # )
-                # self.milvus_client.insert_embeddings(output_emb_list, output_metas)
-            if self.faiss_store_embeddings:
+                self.milvus_client.insert_embeddings(prompt_emb_list, prompt_metas)
+            if self.faiss_store_embeddings and self.faiss_client:
                 self.logger.info(
                     f"Inserting {len(prompt_emb_list)} prompt embeddings to Faiss..."
                 )
                 self.faiss_client.insert_embeddings(prompt_emb_list, prompt_metas)
-                # self.logger.info(
-                #     f"Inserting {len(output_emb_list)} output embeddings to Faiss..."
-                # )
-                # self.faiss_client.insert_embeddings(output_emb_list, output_metas)
             return
         prompts = []
         for idx in batch_indices:

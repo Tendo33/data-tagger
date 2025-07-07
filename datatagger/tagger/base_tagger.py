@@ -3,12 +3,12 @@ import json
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
+from lingua import LanguageDetectorBuilder
+
 from datatagger.settings.base_tagger_setting import BaseTaggerSettings, TagMission
 from datatagger.tagger.tag_missions import TagMissionProcessor
 from datatagger.utils.file_utils import CheckpointManager
 from datatagger.utils.logger import setup_logger
-from lingua import LanguageDetectorBuilder
-from datatagger.utils.embedding_store import EmbeddingStore
 
 
 class BaseUnifiedTagger:
@@ -58,10 +58,6 @@ class BaseUnifiedTagger:
                 meta_file=self.faiss_meta_file,
                 dim=self.dimension,
             )
-        # 初始化EmbeddingStore
-        self.embedding_store = EmbeddingStore(
-            faiss_client=self.faiss_client, milvus_client=self.milvus_client
-        )
         if settings.input_file:
             _, self.checkpoint_data_file, self.checkpoint_state_file = (
                 self.get_output_files(

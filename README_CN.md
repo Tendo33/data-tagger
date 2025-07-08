@@ -1,208 +1,244 @@
 # 🚀 data-tagger
 
-> **高效、灵活的多任务批量数据打标签工具**
+[English](./README.md)
+
+<p align="center">
+  <a href="https://pypi.org/project/data-tagger/"><img alt="Python version" src="https://img.shields.io/badge/python-3.11+-blue.svg"></a>
+  <a href="https://github.com/Tendo33/data-tagger/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Tendo33/data-tagger"></a>
+  <a href="https://github.com/Tendo33/data-tagger/pulls"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+  <a href="https://github.com/Tendo33/data-tagger/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/Tendo33/data-tagger?style=social"></a>
+</p>
+
+<h3 align="center">
+  一个高效、灵活、多任务的批量数据标注工具
+</h3>
+
+<p align="center">
+  <b>data-tagger</b> 旨在为大规模数据集提供一站式的标注解决方案，包括质量评估、难度定级、意图分类、安全检测、奖励模型打分、语种识别和向量嵌入生成。它无缝支持本地 VLLM 模型和远程 API 推理，配置灵活，易于扩展。
+</p>
 
 ---
 
-<p align="center">
-  <b>data-tagger</b> 是一款高效支持大规模数据集质量评估、难度评估、分类、安全性检测、奖励评分、语言识别及嵌入向量生成的工具。支持本地 VLLM 推理和远程 API 推理，配置灵活，易于集成。
-</p>
+## 目录
+- [🚀 data-tagger](#-data-tagger)
+  - [目录](#目录)
+  - [🌟 主要特性](#-主要特性)
+  - [💡 工作流](#-工作流)
+  - [📦 安装指南](#-安装指南)
+  - [🚀 快速开始](#-快速开始)
+    - [本地 VLLM 推理](#本地-vllm-推理)
+    - [远程 API 推理](#远程-api-推理)
+  - [⚙️ 配置说明](#️-配置说明)
+  - [🧩 任务类型与数据字段](#-任务类型与数据字段)
+    - [支持的任务类型](#支持的任务类型)
+    - [输出数据字段](#输出数据字段)
+  - [🛠️ 数据格式化工具](#️-数据格式化工具)
+  - [❓ FAQ](#-faq)
 
 ---
 
 ## 🌟 主要特性
 
-- **多任务批量打标签**：支持 QUALITY、DIFFICULTY、CLASSIFICATION、SAFETY、REWARD、LANGUAGE、EMBEDDING 等任务类型
-- **本地与 API 推理**：可选本地 VLLM 模型或远程 API
-- **高效数据格式化**：内置多格式数据清洗与转换工具
-- **灵活配置**：支持配置文件与命令行参数，任务/模型/批量/字段名等均可自定义
-- **嵌入向量存储**：支持本地 Faiss 或 Milvus
-- **易于扩展**：模块化设计，便于新增任务类型
+- **多任务支持**: 内置多种标注任务，如质量 (`QUALITY`)、难度 (`DIFFICULTY`)、分类 (`CLASSIFICATION`)、安全 (`SAFETY`)、奖励 (`REWARD`)、语种 (`LANGUAGE`) 和向量 (`EMBEDDING`)。
+- **双模式推理**: 可自由选择使用本地部署的 **VLLM** 模型进行推理，或调用远程 **API** 服务，兼顾性能与成本。
+- **高效数据处理**: 提供数据格式化工具，轻松完成数据清洗和格式转换。
+- **灵活配置**: 通过命令行参数或配置文件，可轻松定制任务类型、模型、批处理大小、输入输出字段等。
+- **向量存储**: 支持将生成的 Embedding 存储到本地 **Faiss** 或分布式 **Milvus**。
+- **易于扩展**: 采用模块化设计，可以方便地添加新的标注任务类型。
 
 ---
 
-## 📦 安装与依赖
+## 💡 工作流
 
-- **Python >= 3.11**
-- 推荐使用虚拟环境
+`data-tagger` 的核心工作流程非常简单和清晰：
 
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt  # 或根据 pyproject.toml 安装
+```mermaid
+graph LR
+    A[原始数据 (JSON/JSONL)] --> B(data-tagger);
+    B --> C{选择推理模式};
+    C -- 本地 --> D[⚡ VLLM 高速推理];
+    C -- 远程 --> E[☁️ API 服务];
+    D --> F[标注后数据 (JSONL)];
+    E --> F;
 ```
 
-**主要依赖**（详见 `pyproject.toml`）：
-- vllm
-- lingua-language-detector
-- loguru
-- pydantic-settings
-- json-repair
+-----
 
----
+## 📦 安装指南
+
+  - **环境要求**: **Python \>= 3.11**
+  - 推荐使用虚拟环境以避免包版本冲突。
+
+<!-- end list -->
+
+```bash
+# 1. 创建并激活虚拟环境
+cd data-tagger
+
+uv sync
+```
+
+**主要依赖项** (详情请见 `pyproject.toml`):
+
+  - `vllm`: 用于本地大模型推理。
+  - `lingua-language-detector`: 用于语种识别。
+  - `loguru`: 提供更强大的日志记录。
+  - `pydantic-settings`: 用于环境和配置管理。
+  - `json-repair`: 用于修复不规范的 JSON 输出。
+
+-----
 
 ## 🚀 快速开始
 
+我们提供了开箱即用的测试脚本，您也可以手动执行命令。
+
 ### 本地 VLLM 推理
 
+使用本地模型进行分类任务的示例：
+
 ```bash
-bash scripts/classification_test.sh
+# 直接运行测试脚本
+bash scripts/vllm/classification_test.sh
 ```
 
-或手动运行：
+或者手动运行：
 
 ```bash
 python -m datatagger.tagger.unified_tagger_vllm \
-  --vllm_model_path <本地模型路径> \
+  --vllm_model_path <你的本地模型路径> \
   --tag_mission CLASSIFICATION \
-  --input_file <输入文件> \
-  --output_file <输出文件> \
+  --input_file data/test_data/sample_data_for_vllm_tagger.jsonl \
+  --output_file data/test_output/classification_vllm_output.jsonl \
   --prompt_field instruction \
-  --output_field output \
   --batch_size 5 \
   --device 0
 ```
 
 ### 远程 API 推理
 
+使用 API 同时执行多个标注任务的示例：
+
 ```bash
-bash scripts/run_all_taggers_api.sh
+# 直接运行聚合脚本
+bash scripts/api/run_all_taggers_api.sh
 ```
 
-或手动运行：
+或者手动运行单个任务（以质量评估为例）：
 
 ```bash
 python -m datatagger.tagger.unified_tagger_api \
-  --api_model_name <API模型名> \
-  --api_url <API地址> \
-  --api_key <API密钥> \
+  --api_model_name <你的API模型名> \
+  --api_url <你的API地址> \
+  --api_key <你的API密钥> \
   --tag_mission QUALITY \
-  --input_file <输入文件> \
-  --output_file <输出文件>
+  --input_file data/test_data/sample_data_for_api_tagger.jsonl \
+  --output_file data/test_output/quality_api_output.jsonl
 ```
 
----
+-----
 
-## ⚙️ 配置说明（主要参数）
+## ⚙️ 配置说明
 
-| 参数 | 说明 |
-|------|------|
-| `--tag_mission` | 任务类型（QUALITY、DIFFICULTY、CLASSIFICATION 等） |
-| `--input_file` / `--output_file` | 输入/输出文件路径 |
-| `--prompt_field` / `--output_field` | 输入文件中 prompt/response 字段名 |
-| `--batch_size` | 批处理大小 |
-| `--device` | GPU 设备号（本地推理） |
-| `--vllm_model_path` | 本地模型路径（VLLM） |
-| `--api_model_name` / `--api_url` / `--api_key` | API 模式相关参数 |
-| `--faiss_store_embeddings` / `--milvus_store_embeddings` | 是否存储 embedding |
-| ... | 更多参数详见各 settings 文件和脚本注释 |
+`data-tagger` 支持丰富的命令行参数来控制任务行为。
 
----
+\<details\>
+\<summary\>\<b\>📚 点击展开/折叠主要参数说明\</b\>\</summary\>
+
+| 参数 | 描述 |
+|---|---|
+| `--tag_mission` | **必须**。指定任务类型，如 `QUALITY`, `DIFFICULTY`, `CLASSIFICATION` 等。 |
+| `--input_file` / `--output_file` | **必须**。输入和输出文件的路径。 |
+| `--prompt_field` / `--output_field` | 输入文件中作为 prompt 和 response 的字段名。 |
+| `--batch_size` | 处理数据的批次大小，默认为 `5`。 |
+| `--device` | **VLLM 模式**。指定使用的 GPU 设备 ID。 |
+| `--vllm_model_path` | **VLLM 模式**。本地模型的路径。 |
+| `--api_model_name` / `--api_url` / `--api_key` | **API 模式**。API 服务的相关参数。 |
+| `--faiss_store_embeddings` / `--milvus_store_embeddings` | **EMBEDDING 任务**。是否将向量存储到 Faiss 或 Milvus。 |
+| `...` | 更多参数请参考 `settings` 目录中的定义和脚本注释。 |
+
+\</details\>
+
+-----
+
+## 🧩 任务类型与数据字段
+
+### 支持的任务类型
+
+| 任务类型 | 描述 |
+|---|---|
+| **QUALITY** | 对话质量评估。对输入内容的整体质量进行打分（1-5分）并给出简要分析。 |
+| **DIFFICULTY** | 难度评估。分析理解或解决输入内容所需的难度，输出一个 0-5 的浮点数。 |
+| **CLASSIFICATION** | 意图分类。对输入内容的主要意图进行分类，输出主要和次要标签。 |
+| **SAFETY** | 安全检测。判断内容是否涉及暴力、色情、隐私等，输出安全标签。 |
+| **REWARD** | 奖励模型打分。对内容的奖励价值进行量化打分（0-5分）。 |
+| **LANGUAGE** | 语种识别。识别输入内容的主要语言类型。 |
+| **EMBEDDING** | 向量生成。将输入内容转换为向量，用于下游机器学习任务。 |
+
+### 输出数据字段
+
+处理完成后的 `JSONL` 文件会增加以下字段。
+
+\<details\>
+\<summary\>\<b\>📄 点击展开/折叠详细字段说明\</b\>\</summary\>
+
+| 字段名 | 描述 | 示例/范围 |
+|---|---|---|
+| `id` | 自动生成的唯一标识符 | `"a1b2c3d4"` |
+| `system`, `conversations`, `instruction`, `output` | 原始数据字段 | ... |
+| `prompt_field`, `output_field` | 本次任务使用的 prompt 和 output 字段名 | `"instruction"`, `"output"` |
+| `prompt_field_length`, `output_field_length` | prompt 和 output 字段的字符长度 | `20`, `100` |
+| **`difficulty`** | **[难度]** 难度分数，0-5 的浮点数 | `2.5` |
+| **`input_quality`**, **`response_quality`** | **[质量]** 输入/输出的质量分数，1-5 的浮点数 | `4.2`, `4.5` |
+| **`input_quality_explanation`**, **`response_quality_explanation`** | **[质量]** 对质量分数的简要解释 | `"输入清晰，细节充分..."` |
+| **`task_category`**, **`other_task_category`** | **[分类]** 主要和次要任务类别 | `"Coding & Debugging"`, `["Information seeking"]` |
+| **`language`** | **[语种]** 主要语言类型 | `"zh"`, `"en"` |
+| **`safety`** | **[安全]** 安全标签 | `"Safe"` |
+| **`instruct_reward`** | **[奖励]** 奖励模型分数，0-5 的浮点数 | `3.8` |
+| `min_neighbor_distance` | **[向量]** 最小邻居距离，用于相似性分析 | `0.12` |
+| `repeat_count` | 重复次数，用于去重分析 | `1` |
+
+\</details\>
+
+\<details\>
+\<summary\>\<b\>🏷️ 点击展开/折叠 `task_category` 和 `safety` 的所有可能值\</b\>\</summary\>
+
+  - **`task_category` 可能值**:
+    `Information seeking`, `Reasoning`, `Planning`, `Editing`, `Coding & Debugging`, `Math`, `Role playing`, `Data analysis`, `Creative writing`, `Advice seeking`, `Translation`, `Brainstorming`, `Others`
+
+  - **`safety` 可能值**:
+    `Violent Crimes`, `Non-Violent Crimes`, `Sex-Related Crimes`, `Child Sexual Exploitation`, `Defamation`, `Specialized Advice`, `Privacy`, `Intellectual Property`, `Indiscriminate Weapons`, `Hate`, `Suicide & Self-Harm`, `Sexual Content`, `Elections`, `Code Interpreter Abuse`, `Safe`
+
+\</details\>
+
+-----
 
 ## 🛠️ 数据格式化工具
 
-支持大规模数据集的批量格式转换、清洗、标准化：
+我们提供了一个便捷的脚本，用于批量格式化、清洗和标准化大型数据集。
 
 ```bash
 python -m datatagger.formatter.data_formatter \
-  --input_file <原始数据文件> \
-  --output_file <格式化后文件> \
+  --input_file <你的原始数据文件> \
+  --output_file <格式化后的输出文件> \
   --save_as jsonl
 ```
 
----
-
-## 📚 脚本与用法示例
-
-- `scripts/classification_test.sh`：本地分类任务示例
-- `scripts/run_all_taggers_api.sh`：API 多任务批量处理示例
-- `scripts/api/`、`scripts/vllm/`：各任务单独示例脚本
-
----
+-----
 
 ## ❓ FAQ
 
-1. **支持哪些输入格式？**
-   - 支持 JSON/JSONL，推荐每行为一个样本的 JSONL。
-2. **如何自定义模型或API？**
-   - 修改配置文件或脚本参数即可。
-3. **如何扩展新任务？**
-   - 参考 `datatagger/tagger/` 目录下的实现，继承 `BaseUnifiedTagger`。
-4. **embedding 支持哪些存储？**
-   - 支持本地 Faiss 和 Milvus。
+1.  **支持哪些输入格式？**
 
----
+    > 支持 `JSON` 和 `JSONL`。为了处理大规模数据，强烈推荐使用 `JSONL` 格式（每行一个 JSON 对象）。
 
-## 🧩 任务类型与数据字段说明
+2.  **如何自定义模型或 API？**
 
-### 任务类型说明
+    > **VLLM**: 通过 `--vllm_model_path` 指定本地模型路径。
+    > **API**: 通过 `--api_model_name`, `--api_url`, `--api_key` 参数进行配置。
 
-| 任务类型         | 作用说明                                                                                   |
-|------------------|------------------------------------------------------------------------------------------|
-| QUALITY          | 质量评估。对输入内容的整体质量进行打分和简要分析。                                         |
-| DIFFICULTY       | 难度评估。分析输入内容的理解/解答难度，输出 0-5 浮点分值。                                 |
-| CLASSIFICATION   | 分类任务。对输入内容进行主意图/主任务分类，输出主标签和次标签。                            |
-| SAFETY           | 安全性检测。判断内容是否涉及暴力、色情、隐私等敏感类别，输出安全标签。                    |
-| REWARD           | 奖励评分。对内容的奖励价值进行定量打分。                                                   |
-| LANGUAGE         | 语言识别。识别输入内容的主要语言类型。                                                    |
-| EMBEDDING        | 嵌入向量生成。将输入内容转为向量，便于后续检索、聚类等机器学习任务。                      |
+3.  **支持哪些向量数据库？**
 
-### 数据字段说明
+    > 目前支持本地的 **Faiss** 和分布式的 **Milvus** 用于存储和查询 Embedding。
 
-| 字段名                        | 说明                                                                                   | 取值示例/范围                      |
-|-------------------------------|--------------------------------------------------------------------------------------|------------------------------------|
-| id                            | 唯一标识符（自动生成）                                                                | "a1b2c3d4"                         |
-| system                        | 系统提示词（可选）                                                                    | "You are an expert..."             |
-| conversations                 | 对话内容列表，含角色（human/gpt）和文本                                               | [{"from": "human", "value": ...}]  |
-| instruction                   | 用户输入的主指令/问题                                                                 | "请帮我写一个排序算法"              |
-| output                        | AI 的主要输出/回答                                                                   | "以下是排序算法..."                 |
-| prompt_field                  | 指定的 prompt 字段名（如 instruction）                                                | "instruction"                      |
-| output_field                  | 指定的 output 字段名（如 output）                                                     | "output"                           |
-| prompt_field_length           | prompt 字段的字符长度                                                                 | 20                                 |
-| output_field_length           | output 字段的字符长度                                                                 | 100                                |
-| intent                        | 用户意图分析结果（JSON 字符串，见 prompt_utils.py）                                   | "The user wants to ..."            |
-| knowledge                     | 解决该任务所需的知识点描述                                                            | "Requires knowledge of ..."         |
-| difficulty                    | 难度评分，0-5 浮点数，越高越难                                                        | 2.5                                |
-| input_quality                 | 输入质量评分，1-5 浮点数，越高越好                                                    | 4.2                                |
-| response_quality              | 输出质量评分，1-5 浮点数，越高越好                                                    | 4.5                                |
-| input_quality_explanation     | 输入质量评分简要说明                                                                  | "输入清晰，细节充分..."             |
-| response_quality_explanation  | 输出质量评分简要说明                                                                  | "回答准确，结构清晰..."             |
-| task_category                 | 主任务分类（枚举，见 ALLOWED_TASK_CATEGORIES）                                        | "Coding & Debugging"               |
-| other_task_category           | 其他相关任务分类（列表）                                                              | ["Information seeking"]             |
-| language                      | 主要语言类型（如 "zh", "en"）                                                        | "zh"                               |
-| safety                        | 安全标签（枚举，见 ALLOWED_SAFETY_LABELS）                                            | "Safe"                             |
-| instruct_reward               | 奖励分数，0-5 浮点数                                                                  | 3.8                                |
-| task_category_generator       | 任务分类生成器（可选，记录分类来源）                                                  | "prompt_utils"                     |
-| min_neighbor_distance         | 最近邻距离（用于 embedding 相似性分析）                                               | 0.12                               |
-| repeat_count                  | 重复次数（如用于去重分析）                                                            | 1                                  |
-| min_similar_instruction       | 最相似的 instruction（如有）                                                          | "请帮我写一个排序算法"              |
 
-#### task_category 可选值（见 ALLOWED_TASK_CATEGORIES）：
-Information seeking, Reasoning, Planning, Editing, Coding & Debugging, Math, Role playing, Data analysis, Creative writing, Advice seeking, Translation, Brainstorming, Others
 
-#### safety 可选值（见 ALLOWED_SAFETY_LABELS）：
-Violent Crimes, Non-Violent Crimes, Sex-Related Crimes, Child Sexual Exploitation, Defamation, Specialized Advice, Privacy, Intellectual Property, Indiscriminate Weapons, Hate, Suicide & Self-Harm, Sexual Content, Elections, Code Interpreter Abuse, Safe
-
----
-
-## 📂 目录结构
-
-```text
-datatagger/         # 主程序模块
-  tagger/           # 各类打标签任务实现
-  formatter/        # 数据格式化工具
-  settings/         # 配置与参数定义
-  utils/            # 通用工具函数
-scripts/            # 常用任务脚本
-data/               # 示例数据与输出
-```
-
----
-
-## 🤝 贡献与支持
-
-- 如有问题请查阅源码或联系维护者。
-- 欢迎 issue/PR 贡献改进！
-- [English version README see README.md](./README.md)
-
----

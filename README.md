@@ -23,8 +23,7 @@
 - [🚀 data-tagger](#-data-tagger)
   - [Table of Contents](#table-of-contents)
   - [🌟 Features](#-features)
-  - [💡 Workflow](#-workflow)
-  - [📦 Installation](#-installation)
+  - [� Installation](#-installation)
   - [🚀 Quick Start](#-quick-start)
     - [Local VLLM Inference](#local-vllm-inference)
     - [Remote API Inference](#remote-api-inference)
@@ -47,22 +46,6 @@
 - **Flexible Configuration**: Customize task type, model, batch size, input/output fields, etc., via CLI or config files.
 - **Embedding Storage**: Supports storing generated embeddings to local **Faiss** or distributed **Milvus**.
 - **Easy to Extend**: Modular design makes it easy to add new labeling task types.
-
----
-
-## 💡 Workflow
-
-The core workflow of `data-tagger` is simple and clear:
-
-```mermaid
-graph LR
-    A[Raw Data (JSON/JSONL)] --> B(data-tagger);
-    B --> C{Choose Inference Mode};
-    C -- Local --> D[⚡ VLLM Fast Inference];
-    C -- Remote --> E[☁️ API Service];
-    D --> F[Labeled Data (JSONL)];
-    E --> F;
-```
 
 ---
 

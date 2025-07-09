@@ -5,9 +5,8 @@ import uuid
 from collections import OrderedDict
 from typing import Any, Dict, Generator, List, Optional
 
-from tqdm import tqdm
-
 from datatagger.settings.base_formatter_setting import BaseFormatterSettings
+from tqdm import tqdm
 
 ALLOWED_TASK_CATEGORIES = [
     "Information seeking",
@@ -240,7 +239,7 @@ class UnifiedDataFormatter:
         # 3. Meta data and evaluation fields (new version adaptation)
         od["intent"] = cleaned_entry.get("intent")
         od["knowledge"] = cleaned_entry.get("knowledge")
-        od["difficulty"] = self._parse_score(cleaned_entry.get("difficulty"), 1, 5)
+        od["difficulty"] = self._parse_score(cleaned_entry.get("difficulty"), 0, 5)
         od["input_quality"] = self._parse_score(
             cleaned_entry.get("input_quality"), 0, 5
         )
@@ -265,16 +264,10 @@ class UnifiedDataFormatter:
             if cleaned_entry.get("safety") in ALLOWED_SAFETY_LABELS
             else "Safe"
         )
-        od["instruct_reward"] = self._parse_score(
-            cleaned_entry.get("instruct_reward"), 0, 5
-        )
+        od["instruct_reward"] = cleaned_entry.get("instruct_reward")
         od["task_category_generator"] = cleaned_entry.get("task_category_generator")
-        od["min_neighbor_distance"] = self._parse_score(
-            cleaned_entry.get("min_neighbor_distance"), 0, float("inf")
-        )
-        od["repeat_count"] = self._parse_score(
-            cleaned_entry.get("repeat_count"), 0, float("inf"), as_int=True
-        )
+        od["min_neighbor_distance"] = cleaned_entry.get("min_neighbor_distance")
+        od["repeat_count"] = cleaned_entry.get("repeat_count")
         od["min_similar_instruction"] = cleaned_entry.get("min_similar_instruction")
 
         # 移除所有值为 None 的字段，保持输出整洁

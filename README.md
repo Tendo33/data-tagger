@@ -1,4 +1,4 @@
-# 🚀 data-tagger
+## 🚀 data-tagger
 
 [中文](./README_CN.md)
 
@@ -21,26 +21,25 @@
 
 ## Table of Contents
 - [🚀 data-tagger](#-data-tagger)
-  - [Table of Contents](#table-of-contents)
-  - [🌟 Features](#-features)
-  - [� Installation](#-installation)
-  - [🚀 Quick Start](#-quick-start)
-    - [Local VLLM Inference](#local-vllm-inference)
-    - [Remote API Inference](#remote-api-inference)
-  - [⚙️ Configuration](#️-configuration)
-  - [🧩 Task Types \& Data Fields](#-task-types--data-fields)
-    - [Supported Task Types](#supported-task-types)
-    - [Output Data Fields](#output-data-fields)
-  - [🛠️ Data Formatting Tool](#️-data-formatting-tool)
-  - [❓ FAQ](#-faq)
-  - [📂 Directory Structure](#-directory-structure)
-  - [🤝 Contributing \& Support](#-contributing--support)
+- [Table of Contents](#table-of-contents)
+- [🌟 Features](#-features)
+- [📦 Installation](#-installation)
+- [🚀 Quick Start](#-quick-start)
+  - [Local VLLM Inference](#local-vllm-inference)
+  - [Remote API Inference](#remote-api-inference)
+- [⚙️ Configuration](#️-configuration)
+- [🧩 Task Types \& Data Fields](#-task-types--data-fields)
+  - [Supported Task Types](#supported-task-types)
+- [🧩 Task Types \& Data Fields](#-task-types--data-fields-1)
+  - [Supported Task Types](#supported-task-types-1)
+  - [Output Data Fields](#output-data-fields)
+- [🛠️ Data Formatting Tool](#️-data-formatting-tool)
 
 ---
 
 ## 🌟 Features
 
-- **Multi-task Support**: Built-in support for various labeling tasks, such as QUALITY, DIFFICULTY, CLASSIFICATION, SAFETY, REWARD, LANGUAGE, and EMBEDDING.
+- **Multi-task Support**: Built-in support for various labeling tasks, such as QUALITY, DIFFICULTY, CLASSIFICATION, SAFETY, REWARD, LANGUAGE, and EMBEDDING DISTANCE.
 - **Dual Inference Modes**: Freely choose between local **VLLM** model inference or remote **API** service, balancing performance and cost.
 - **Efficient Data Processing**: Includes data formatting tools for easy data cleaning and format conversion.
 - **Flexible Configuration**: Customize task type, model, batch size, input/output fields, etc., via CLI or config files.
@@ -52,7 +51,7 @@
 ## 📦 Installation
 
 - **Requirements**: **Python >= 3.11**
-- It is recommended to use a virtual environment to avoid dependency conflicts.
+- **uv**
 
 ```bash
 # 1. Create and activate a virtual environment
@@ -60,13 +59,6 @@ cd data-tagger
 
 uv sync
 ```
-
-**Main dependencies** (see `pyproject.toml`):
-- `vllm`: Local large model inference
-- `lingua-language-detector`: Language identification
-- `loguru`: Advanced logging
-- `pydantic-settings`: Environment and config management
-- `json-repair`: Repairing non-standard JSON output
 
 ---
 
@@ -101,7 +93,12 @@ python -m datatagger.tagger.unified_tagger_vllm \
 Example for running multiple labeling tasks via API:
 
 ```bash
-# Run the aggregate script directly
+# 1. Copy the example environment file
+mv .env.example .env
+
+# 2. Edit the environment file
+
+# 3. Run the test script
 bash scripts/api/run_all_taggers_api.sh
 ```
 
@@ -123,8 +120,19 @@ python -m datatagger.tagger.unified_tagger_api \
 
 `data-tagger` supports rich CLI parameters to control task behavior.
 
-<details>
-<summary><b>📚 Click to expand/collapse main parameter descriptions</b></summary>
+```bash
+# VLLM mode
+python -m datatagger.tagger.unified_tagger_vllm --help
+
+# API mode
+python -m datatagger.tagger.unified_tagger_api --help
+```
+
+---
+
+## 🧩 Task Types & Data Fields
+
+### Supported Task Types
 
 | Parameter | Description |
 |---|---|
@@ -137,8 +145,6 @@ python -m datatagger.tagger.unified_tagger_api \
 | `--api_model_name` / `--api_url` / `--api_key` | **API mode.** API service parameters. |
 | `--faiss_store_embeddings` / `--milvus_store_embeddings` | **EMBEDDING task.** Whether to store embeddings to Faiss or Milvus. |
 | `...` | More parameters can be found in the `settings` directory and script comments. |
-
-</details>
 
 ---
 
@@ -160,9 +166,6 @@ python -m datatagger.tagger.unified_tagger_api \
 
 The processed `JSONL` file will add the following fields.
 
-<details>
-<summary><b>📄 Click to expand/collapse detailed field descriptions</b></summary>
-
 | Field Name | Description | Example/Range |
 |---|---|---|
 | `id` | Auto-generated unique identifier | `"a1b2c3d4"` |
@@ -179,7 +182,7 @@ The processed `JSONL` file will add the following fields.
 | `min_neighbor_distance` | **[Embedding]** Minimum neighbor distance for similarity analysis | `0.12` |
 | `repeat_count` | Repeat count for deduplication analysis | `1` |
 
-</details>
+---
 
 <details>
 <summary><b>🏷️ Click to expand/collapse all possible values for `task_category` and `safety`</b></summary>
@@ -205,44 +208,4 @@ python -m datatagger.formatter.data_formatter \
   --save_as jsonl
 ```
 
----
-
-## ❓ FAQ
-
-1.  **What input formats are supported?**
-
-    > Supports `JSON` and `JSONL`. For large-scale data, it is strongly recommended to use `JSONL` (one JSON object per line).
-
-2.  **How to customize model or API?**
-
-    > **VLLM**: Specify the local model path via `--vllm_model_path`.
-    > **API**: Configure via `--api_model_name`, `--api_url`, `--api_key`.
-
-3.  **What embedding storage is supported?**
-
-    > Currently supports local **Faiss** and distributed **Milvus** for storing and querying embeddings.
-
----
-
-## 📂 Directory Structure
-
-```text
-datatagger/         # Main program module
-  tagger/           # Labeling task implementations
-  formatter/        # Data formatting tools
-  settings/         # Config & parameter definitions
-  utils/            # Utility functions
-scripts/            # Common task scripts
-data/               # Example data & outputs
-```
-
----
-
-## 🤝 Contributing & Support
-
-- Please check the source code or contact the maintainer for questions.
-- Contributions (issues/PRs) are welcome!
-- [中文版 README 请见 README_CN.md](./README_CN.md)
-
----
 

@@ -67,10 +67,10 @@ We provide ready-to-use test scripts, or you can run commands manually.
 ### Local VLLM Inference
 
 recommend models:
-- [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
-- [Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
-- [Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
-- [Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B)
+- for general task: [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
+- for embedding task: [Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
+- for reward task: [Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
+- for safety task: [Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B) 
 
 Example for local model classification task:
 

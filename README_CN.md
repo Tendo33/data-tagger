@@ -69,10 +69,10 @@ uv sync
 ### 本地 VLLM 推理
 
 推荐模型：
-- [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
-- [Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
-- [Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
-- [Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B)
+- 通用任务：[Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
+- 嵌入任务：[Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
+- 奖励任务：[Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
+- 安全任务：[Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B)
 
 本地模型分类任务示例：
 

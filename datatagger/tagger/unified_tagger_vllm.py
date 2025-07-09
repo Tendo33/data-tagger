@@ -1,13 +1,12 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from lingua import LanguageDetectorBuilder
-from transformers import AutoTokenizer
-from vllm import LLM, PoolingParams, SamplingParams
-
 from datatagger.settings.base_tagger_setting import TagMission
 from datatagger.settings.tagger_settings_vllm import TaggerSettingsVLLM
 from datatagger.tagger.base_tagger import BaseUnifiedTagger
 from datatagger.utils.file_utils import load_dataset_from_file
+from lingua import LanguageDetectorBuilder
+from transformers import AutoTokenizer
+from vllm import LLM, PoolingParams, SamplingParams
 
 
 class UnifiedTaggerVLLM(BaseUnifiedTagger):
@@ -134,7 +133,7 @@ class UnifiedTaggerVLLM(BaseUnifiedTagger):
             )
             params = PoolingParams(dimensions=self.dimension)
             return llm, params, tokenizer
-        self.logger.info("Loading vllm model for general task...")
+        self.logger.info(f"Loading vllm model for {self.mission} task...")
         llm = LLM(
             model=self.vllm_model_path,
             dtype=self.settings.dtype,

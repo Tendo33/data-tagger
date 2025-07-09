@@ -10,7 +10,7 @@ OUTPUT_DIR="/root/github_projet/data-tagger/data/tagged"
 
 # Model paths (local inference)
 LLM_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-8B"
-REWARD_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Skywork-Reward-Llama-3.1-8B-v0.2"
+REWARD_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Skywork-Reward-V2-Llama-3.1-8B"
 EMBEDDING_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-Embedding-4B"
 SAFETY_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Llama-Guard-3-8B"
 
@@ -25,7 +25,7 @@ COMMON_PARAMS="\
     --checkpoint_every 10 \
     --device 0 \
     --tensor_parallel_size 1 \
-    --gpu_memory_utilization 0.3"
+    --gpu_memory_utilization 0.23"
 
 echo "========== Starting all tagger tasks (VLLM local inference) =========="
 

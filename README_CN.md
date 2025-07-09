@@ -14,7 +14,7 @@
 </h3>
 
 <p align="center">
-  <b>data-tagger</b> 旨在为大规模数据集提供一站式的标注解决方案，包括质量评估、难度定级、意图分类、安全检测、奖励模型打分、语种识别和向量嵌入生成。它无缝支持本地 VLLM 模型和远程 API 推理，配置灵活，易于扩展。
+  <b>data-tagger</b> 提供一站式大规模数据集标注解决方案，包括质量评估、难度定级、意图分类、安全检测、奖励打分、语种识别和向量生成。支持本地 VLLM 模型和远程 API 推理，配置灵活，易于扩展。
 </p>
 
 ---
@@ -39,10 +39,10 @@
 
 ## 🌟 主要特性
 
-- **多任务支持**：内置多种标注任务，如质量（QUALITY）、难度（DIFFICULTY）、分类（CLASSIFICATION）、安全（SAFETY）、奖励（REWARD）、语种（LANGUAGE）和向量（EMBEDDING）。
-- **双模式推理**：可选择本地 VLLM 模型推理或远程 API 服务，兼顾性能与成本。
-- **高效数据处理**：提供数据格式化工具，便于数据清洗和格式转换。
-- **灵活配置**：通过命令行参数或配置文件自定义任务类型、模型、批处理大小、输入输出字段等。
+- **多任务支持**：内置多种标注任务，如 QUALITY、DIFFICULTY、CLASSIFICATION、SAFETY、REWARD、LANGUAGE、EMBEDDING。
+- **双推理模式**：可选择本地 VLLM 模型或远程 API 服务，兼顾性能与成本。
+- **高效数据处理**：内置数据格式化工具，便于数据清洗和格式转换。
+- **灵活配置**：可通过 CLI 或配置文件自定义任务类型、模型、批量大小、输入输出字段等。
 - **向量存储**：支持将生成的嵌入向量存储到本地 Faiss 或分布式 Milvus。
 - **易于扩展**：模块化设计，便于添加新任务类型。
 
@@ -51,7 +51,7 @@
 ## 📦 安装指南
 
 - **环境要求**：**Python >= 3.11**
-- 推荐使用虚拟环境避免依赖冲突。
+- **uv**
 
 ```bash
 # 1. 创建并激活虚拟环境
@@ -68,9 +68,17 @@ uv sync
 
 ### 本地 VLLM 推理
 
+推荐模型：
+- [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
+- [Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
+- [Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
+- [Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B)
+
+本地模型分类任务示例：
+
 ```bash
 # 直接运行测试脚本
-bash scripts/vllm/classification_test.sh
+bash examples/vllm/run_all_taggers_vllm.sh
 ```
 
 或手动运行：
@@ -79,14 +87,16 @@ bash scripts/vllm/classification_test.sh
 python -m datatagger.tagger.unified_tagger_vllm \
   --vllm_model_path <你的本地模型路径> \
   --tag_mission CLASSIFICATION \
-  --input_file data/test_data/sample_data_for_vllm_tagger.jsonl \
-  --output_file data/test_output/classification_vllm_output.jsonl \
+  --input_file data/alpaca_zh_demo.json \
+  --output_file data/alpaca_zh_demo_classification_vllm_output.jsonl \
   --prompt_field instruction \
   --batch_size 5 \
   --device 0
 ```
 
 ### 远程 API 推理
+
+API 多任务标注示例：
 
 ```bash
 # 1. 拷贝示例环境变量文件
@@ -126,15 +136,15 @@ python -m datatagger.tagger.unified_tagger_api --help
 
 | 参数 | 描述 |
 |---|---|
-| `--tag_mission` | **必须**。指定任务类型，如 QUALITY、DIFFICULTY、CLASSIFICATION 等。 |
-| `--input_file` / `--output_file` | **必须**。输入和输出文件路径。 |
-| `--prompt_field` / `--output_field` | 输入文件中 prompt 和 response 的字段名。 |
-| `--batch_size` | 批处理大小，默认 5。 |
-| `--device` | **VLLM 模式**。GPU 设备 ID。 |
-| `--vllm_model_path` | **VLLM 模式**。本地模型路径。 |
-| `--api_model_name` / `--api_url` / `--api_key` | **API 模式**。API 服务参数。 |
-| `--faiss_store_embeddings` / `--milvus_store_embeddings` | **EMBEDDING 任务**。是否存储到 Faiss 或 Milvus。 |
-| `...` | 更多参数请参考 settings 目录和脚本注释。 |
+| `--tag_mission` | **必填。** 任务类型，如 QUALITY、DIFFICULTY、CLASSIFICATION 等。 |
+| `--input_file` / `--output_file` | **必填。** 输入和输出文件路径。 |
+| `--prompt_field` / `--output_field` | 输入文件中 prompt 和 response 字段名。 |
+| `--batch_size` | 批量大小，默认 5。 |
+| `--device` | **VLLM 模式。** GPU 设备 ID。 |
+| `--vllm_model_path` | **VLLM 模式。** 本地模型路径。 |
+| `--api_model_name` / `--api_url` / `--api_key` | **API 模式。** API 服务参数。 |
+| `--faiss_store_embeddings` / `--milvus_store_embeddings` | **EMBEDDING 任务。** 是否存储到 Faiss 或 Milvus。 |
+| `...` | 更多参数见 settings 目录和脚本注释。 |
 
 ---
 

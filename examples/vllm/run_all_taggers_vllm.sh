@@ -9,10 +9,10 @@ INPUT_FILE="/root/github_projet/data-tagger/data/alpaca_zh_demo.json"
 OUTPUT_DIR="/root/github_projet/data-tagger/data/tagged"
 
 # Model paths (local inference)
-LLM_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-8B"
-REWARD_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Skywork-Reward-V2-Llama-3.1-8B"
-EMBEDDING_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Qwen3-Embedding-4B"
-SAFETY_MODEL_PATH="/mnt/public/sunjinfeng/base_llms/hub/AI-ModelScope/Llama-Guard-3-8B"
+LLM_MODEL_PATH="/mnt/public/base_llms/hub/AI-ModelScope/Qwen3-8B"
+REWARD_MODEL_PATH="/mnt/public/base_llms/hub/AI-ModelScope/Skywork-Reward-V2-Llama-3.1-8B"
+EMBEDDING_MODEL_PATH="/mnt/public/base_llms/hub/AI-ModelScope/Qwen3-Embedding-4B"
+SAFETY_MODEL_PATH="/mnt/public/base_llms/hub/AI-ModelScope/Llama-Guard-3-8B"
 
 mkdir -p "$OUTPUT_DIR"
 

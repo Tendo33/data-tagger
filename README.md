@@ -30,8 +30,6 @@
 - [⚙️ Configuration](#️-configuration)
 - [🧩 Task Types \& Data Fields](#-task-types--data-fields)
   - [Supported Task Types](#supported-task-types)
-- [🧩 Task Types \& Data Fields](#-task-types--data-fields-1)
-  - [Supported Task Types](#supported-task-types-1)
   - [Output Data Fields](#output-data-fields)
 - [🛠️ Data Formatting Tool](#️-data-formatting-tool)
 
@@ -68,11 +66,17 @@ We provide ready-to-use test scripts, or you can run commands manually.
 
 ### Local VLLM Inference
 
+recommend models:
+- [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
+- [Qwen3-Embedding-4B](https://huggingface.co/Qwen/Qwen3-Embedding-4B)
+- [Skywork-Reward-V2-Llama-3.1-8B](https://huggingface.co/Skywork/Skywork-Reward-V2-Llama-3.1-8B)
+- [Llama-Guard-3-8B](https://huggingface.co/Skywork/Llama-Guard-3-8B)
+
 Example for local model classification task:
 
 ```bash
 # Run the test script directly
-bash scripts/vllm/classification_test.sh
+bash examples/vllm/run_all_taggers_vllm.sh
 ```
 
 Or run manually:
@@ -81,8 +85,8 @@ Or run manually:
 python -m datatagger.tagger.unified_tagger_vllm \
   --vllm_model_path <your local model path> \
   --tag_mission CLASSIFICATION \
-  --input_file data/test_data/sample_data_for_vllm_tagger.jsonl \
-  --output_file data/test_output/classification_vllm_output.jsonl \
+  --input_file data/alpaca_zh_demo.json \
+  --output_file data/alpaca_zh_demo_classification_vllm_output.jsonl \
   --prompt_field instruction \
   --batch_size 5 \
   --device 0
@@ -127,24 +131,6 @@ python -m datatagger.tagger.unified_tagger_vllm --help
 # API mode
 python -m datatagger.tagger.unified_tagger_api --help
 ```
-
----
-
-## 🧩 Task Types & Data Fields
-
-### Supported Task Types
-
-| Parameter | Description |
-|---|---|
-| `--tag_mission` | **Required.** Task type, e.g., `QUALITY`, `DIFFICULTY`, `CLASSIFICATION`, etc. |
-| `--input_file` / `--output_file` | **Required.** Input and output file paths. |
-| `--prompt_field` / `--output_field` | Field names for prompt and response in the input file. |
-| `--batch_size` | Batch size, default is `5`. |
-| `--device` | **VLLM mode.** GPU device ID. |
-| `--vllm_model_path` | **VLLM mode.** Local model path. |
-| `--api_model_name` / `--api_url` / `--api_key` | **API mode.** API service parameters. |
-| `--faiss_store_embeddings` / `--milvus_store_embeddings` | **EMBEDDING task.** Whether to store embeddings to Faiss or Milvus. |
-| `...` | More parameters can be found in the `settings` directory and script comments. |
 
 ---
 
